@@ -15,40 +15,84 @@ const MOCK_CITIES = [
 ];
 
 function App() {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [localDate, setLocalDate] = useState(new Date());
+  const [participantDate, setParticipantDate] = useState<Date | null>(null);
   const [selectedCity, setSelectedCity] = useState('');
   const [cityTimezone, setCityTimezone] = useState('');
-  const [convertedTime, setConvertedTime] = useState<string>('');
+  const [isLocalChange, setIsLocalChange] = useState(false);
 
   const handleCityChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const city = MOCK_CITIES.find(city => city.name === event.target.value);
     if (city) {
       setSelectedCity(city.name);
       setCityTimezone(city.timezone);
+      // When city changes, update participant's time based on local time
+      setIsLocalChange(true);
+    }
+  };
+
+  const handleLocalDateChange = (date: Date) => {
+    setLocalDate(date);
+    setIsLocalChange(true);
+  };
+
+  const handleParticipantDateChange = (date: Date | null) => {
+    if (date) {
+      setParticipantDate(date);
+      setIsLocalChange(false);
     }
   };
 
   useEffect(() => {
     if (cityTimezone) {
-      // Convert the time to the selected timezone
-      const options: Intl.DateTimeFormatOptions = {
-        timeZone: cityTimezone,
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        hour12: true
-      };
-      
-      const converted = selectedDate.toLocaleString('en-US', options);
-      setConvertedTime(converted);
+      if (isLocalChange) {
+        // Convert local time to participant's timezone
+        const options: Intl.DateTimeFormatOptions = {
+          timeZone: cityTimezone,
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        };
+        
+        const converted = new Date(localDate.toLocaleString('en-US', { timeZone: cityTimezone }));
+        setParticipantDate(converted);
+      } else if (participantDate) {
+        // Convert participant's time to local time
+        const options: Intl.DateTimeFormatOptions = {
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        };
+        
+        const converted = new Date(participantDate.toLocaleString('en-US', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+        setLocalDate(converted);
+      }
     }
-  }, [selectedDate, cityTimezone]);
+  }, [localDate, participantDate, cityTimezone, isLocalChange]);
+
+  const formatTime = (date: Date, timezone: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: timezone,
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    };
+    return date.toLocaleString('en-US', options);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="max-w-2xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Time Zone Converter
@@ -60,43 +104,48 @@ function App() {
         
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-8">
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="date-picker" className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Your Local Date and Time
+            <div className="space-y-8">
+              <div className="text-center">
+                <label htmlFor="local-date-picker" className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Local Date and Time
                 </label>
-                <div className="relative">
+                <div className="relative max-w-md mx-auto">
                   <DatePicker
-                    selected={selectedDate}
-                    onChange={(date: Date | null) => setSelectedDate(date || new Date())}
+                    selected={localDate}
+                    onChange={(date: Date | null) => handleLocalDateChange(date || new Date())}
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption="Time"
                     dateFormat="MMMM d, yyyy h:mm aa"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    id="date-picker"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-center"
+                    id="local-date-picker"
                   />
                 </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Your Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                </p>
               </div>
 
-              <div>
+              <div className="text-center">
                 <label htmlFor="city-selector" className="block text-sm font-medium text-gray-700 mb-2">
                   Select Participant's City
                 </label>
-                <select
-                  id="city-selector"
-                  value={selectedCity}
-                  onChange={handleCityChange}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                >
-                  <option value="">Select a city</option>
-                  {MOCK_CITIES.map(city => (
-                    <option key={city.id} value={city.name}>
-                      {city.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="max-w-md mx-auto">
+                  <select
+                    id="city-selector"
+                    value={selectedCity}
+                    onChange={handleCityChange}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-center"
+                  >
+                    <option value="">Select a city</option>
+                    {MOCK_CITIES.map(city => (
+                      <option key={city.id} value={city.name}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 {cityTimezone && (
                   <p className="mt-2 text-sm text-gray-600">
                     Participant's Timezone: {cityTimezone}
@@ -104,12 +153,24 @@ function App() {
                 )}
               </div>
 
-              {convertedTime && (
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Meeting Time in {selectedCity}</h3>
-                  <p className="text-2xl font-semibold text-blue-600">
-                    {convertedTime}
-                  </p>
+              {cityTimezone && participantDate && (
+                <div className="text-center">
+                  <label htmlFor="participant-date-picker" className="block text-sm font-medium text-gray-700 mb-2">
+                    Participant's Date and Time in {selectedCity}
+                  </label>
+                  <div className="relative max-w-md mx-auto">
+                    <DatePicker
+                      selected={participantDate}
+                      onChange={handleParticipantDateChange}
+                      showTimeSelect
+                      timeFormat="HH:mm"
+                      timeIntervals={15}
+                      timeCaption="Time"
+                      dateFormat="MMMM d, yyyy h:mm aa"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-center"
+                      id="participant-date-picker"
+                    />
+                  </div>
                 </div>
               )}
             </div>
