@@ -91,15 +91,25 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-      <div className="max-w-2xl w-full">
-        <div className="text-center mb-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full mx-auto">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Time Zone Converter
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 mb-6">
             Schedule meetings across different time zones
           </p>
+          
+          <div className="bg-blue-50 rounded-xl p-6 mb-8 text-left">
+            <h2 className="text-xl font-semibold text-blue-800 mb-3">The Vibe Coding Story</h2>
+            <p className="text-gray-700 mb-3">
+              Born from a 3 AM coding session fueled by coffee and existential dread, this app was created when its developer missed yet another international meeting due to timezone confusion. "I'm not a timezone expert," they said, "I'm just a developer who's tired of explaining why I'm 3 hours late to every call."
+            </p>
+            <p className="text-gray-700">
+              Built with pure vibes and a sprinkle of sleep-deprived genius, this tool aims to save you from the eternal embarrassment of scheduling meetings at 3 AM for your Australian colleagues. Because nothing says "I value your time" like getting the timezone right on the first try.
+            </p>
+          </div>
         </div>
         
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
